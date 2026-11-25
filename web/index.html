@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reel Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f6f5f1; --card:#fff; --ink:#1d1d1f; --mute:#6b6b70; --line:#e6e3dc; --accent:#ffd233; --accent-ink:#1d1d1f; --ok:#1f9d55; --bad:#d64545; --blue:#5b6fd8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141416; --card:#1e1e21; --ink:#f2f2f3; --mute:#a0a0a8; --line:#2e2e33; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:Nunito, system-ui, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:28px 16px 60px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+  h1 { font-weight:900; font-size:26px; margin:0; letter-spacing:-.3px; }
+  h1 span { background:var(--accent); color:var(--accent-ink); padding:0 8px; border-radius:6px; }
+  .pill { font-size:13px; font-weight:700; padding:6px 12px; border-radius:99px; border:1px solid var(--line); background:var(--card); white-space:nowrap; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:var(--mute); vertical-align:1px; }
+  .on .dot { background:var(--ok); } .off .dot { background:var(--bad); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:18px; }
+  label { display:block; font-weight:800; font-size:14px; margin:14px 0 6px; }
+  label small { font-weight:600; color:var(--mute); }
+  input { width:100%; font:inherit; font-size:15px; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); }
+  input:focus { outline:2px solid var(--accent); border-color:transparent; }
+  .row { display:flex; gap:12px; } .row > div { flex:1; } .row > div.narrow { flex:0 0 130px; }
+  button { font:inherit; font-weight:900; font-size:16px; border:0; border-radius:10px; padding:13px 18px; background:var(--accent); color:var(--accent-ink); cursor:pointer; margin-top:18px; width:100%; }
+  button:disabled { opacity:.5; cursor:default; }
+  .msg { margin-top:12px; font-weight:700; font-size:14px; min-height:1em; }
+  .msg.err { color:var(--bad); } .msg.ok { color:var(--ok); }
+  h2 { font-size:17px; font-weight:900; margin:26px 0 10px; }
+  .job { border-top:1px solid var(--line); padding:14px 0; } .job:first-child { border-top:0; padding-top:0; }
+  .job-top { display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
+  .job-title { font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .when { color:var(--mute); font-size:13px; white-space:nowrap; }
+  .status { font-size:13px; font-weight:800; color:var(--mute); margin-top:4px; }
+  .status.done { color:var(--ok); } .status.failed { color:var(--bad); }
+  .bar { height:6px; background:var(--line); border-radius:99px; overflow:hidden; margin-top:8px; }
+  .bar i { display:block; height:100%; background:var(--blue); transition:width .6s; }
+  .out { display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; }
+  video { width:220px; max-width:100%; border-radius:10px; background:#000; aspect-ratio:9/16; }
+  .links { display:flex; flex-direction:column; gap:8px; font-weight:700; font-size:14px; }
+  .links a { color:var(--blue); text-decoration:none; } .links a:hover { text-decoration:underline; }
+  .err-text { color:var(--bad); font-size:13px; margin-top:6px; word-break:break-word; }
+  .empty { color:var(--mute); font-size:14px; }
+  .hint { color:var(--mute); font-size:13px; margin-top:10px; line-height:1.5; }
+  @media (max-width:560px) { .row { flex-direction:column; gap:0; } .row > div.narrow { flex:1; } video { width:100%; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Inglés Ahorita <span>Reels</span></h1>
+    <div id="online" class="pill"><span class="dot"></span><span id="online-text">Checking…</span></div>
+  </header>
+
+  <div class="card">
+    <form id="form">
+      <label for="video">Raw video — Google Drive link</label>
+      <input id="video" placeholder="https://drive.google.com/file/d/…/view" required autocomplete="off">
+      <div class="row">
+        <div>
+          <label for="script">Script doc <small>(optional)</small></label>
+          <input id="script" placeholder="Leave empty for the usual teleprompter doc" autocomplete="off">
+        </div>
+        <div class="narrow">
+          <label for="section">Script # <small>(optional)</small></label>
+          <input id="section" placeholder="auto" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+      <div id="pw-box" hidden>
+        <label for="pw">Password</label>
+        <input id="pw" type="password" autocomplete="current-password">
+      </div>
+      <button id="go" type="submit">Make the reel</button>
+      <div id="msg" class="msg"></div>
+      <p class="hint">The Drive file must be shared as “Anyone with the link”. A reel takes about 5–10 minutes. You can close this page and come back — your reels stay listed below.</p>
+    </form>
+  </div>
+
+  <h2>Reels</h2>
+  <div class="card" id="jobs"><div class="empty">Loading…</div></div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const STEPS = [["downloading", 5, "Downloading the video"], ["transcribing", 15, "Listening to what he says"],
+  ["finding the script", 30, "Finding the script"], ["no matching script", 32, "Building a script from the recording"],
+  ["deciding the edit", 42, "Choosing the best takes"], ["exact word timing", 52, "Timing the captions"],
+  ["captions", 62, "Writing the captions"], ["rendering", 72, "Rendering the video"], ["done", 100, "Done"]];
+
+function store(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function load(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }
+// private link: ?key=... signs this browser in once, then the key is removed from the address bar
+const urlKey = new URLSearchParams(location.search).get("key");
+if (urlKey) { store("pw", urlKey); history.replaceState(null, "", location.pathname); }
+$("pw").value = load("pw");
+function askPassword(show) { $("pw-box").hidden = !show; $("pw").required = show; }
+askPassword(false);  // the box only appears if the site is ever locked again (401)
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { ...opts, headers: { "content-type": "application/json", "x-app-password": $("pw").value, ...(opts.headers || {}) } });
+  let body = {}; try { body = await r.json(); } catch {}
+  return { ok: r.ok, status: r.status, body };
+}
+
+async function checkOnline() {
+  try {
+    const r = await fetch("/api/status"); const { online } = await r.json();
+    $("online").className = "pill " + (online ? "on" : "off");
+    $("online-text").textContent = online ? "Editor online" : "Editor offline";
+  } catch { $("online").className = "pill off"; $("online-text").textContent = "Editor offline"; }
+}
+
+function stepOf(job) {
+  if (job.status === "done") return [100, "Done"];
+  if (job.status === "failed") return [100, "Failed"];
+  if (job.status === "queued" || job.status === "waiting") return [2, "Waiting for the previous reel to finish"];
+  const p = (job.progress || "").toLowerCase();
+  for (let i = STEPS.length - 1; i >= 0; i--) if (p.includes(STEPS[i][0])) return [STEPS[i][1], STEPS[i][2]];
+  return [3, "Starting"];
+}
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+function render(jobs) {
+  const box = $("jobs"); box.replaceChildren();
+  if (!jobs.length) { box.append(el("div", "empty", "No reels yet.")); return; }
+  for (const j of jobs) {
+    const row = el("div", "job");
+    const top = el("div", "job-top");
+    top.append(el("div", "job-title", j.script_title || "Reel " + j.job_id),
+               el("div", "when", new Date((j.created_at || 0) * 1000).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })));
+    const [pct, label] = stepOf(j);
+    const st = el("div", "status " + (j.status === "done" ? "done" : j.status === "failed" ? "failed" : ""),
+                  label + (j.status === "done" && j.duration ? ` · ${j.duration}s` : ""));
+    row.append(top, st);
+    if (j.status !== "done" && j.status !== "failed") {
+      const bar = el("div", "bar"); const fill = el("i"); fill.style.width = pct + "%"; bar.append(fill); row.append(bar);
+    }
+    if (j.status === "failed") row.append(el("div", "err-text", j.error || "Something went wrong."));
+    if (j.status === "done" && j.draft_url) {
+      const out = el("div", "out");
+      const v = el("video"); v.controls = true; v.preload = "metadata"; v.playsInline = true; if (j.cover_url) v.poster = j.cover_url; v.src = j.draft_url;
+      const links = el("div", "links");
+      for (const [k, name] of [["draft_url", "Download the reel"], ["cover_url", "Cover image"], ["report_url", "What was cut and why"], ["srt_url", "Subtitles (.srt)"]]) {
+        if (!j[k]) continue; const a = el("a", null, name); a.href = j[k]; a.target = "_blank"; a.rel = "noopener"; links.append(a);
+      }
+      out.append(v, links); row.append(out);
+    }
+    box.append(row);
+  }
+}
+
+let timer = null, lastKey = "";
+async function refresh() {
+  const r = await api("/api/jobs");
+  if (r.status === 401) { askPassword(true); $("jobs").replaceChildren(el("div", "empty", "Enter the password to see your reels.")); return; }
+  if (!r.ok) { $("jobs").replaceChildren(el("div", "empty", r.body.error || "Can't reach the editor right now.")); return; }
+  const key = JSON.stringify(r.body.map((j) => [j.job_id, j.status, j.progress, j.draft_url]));
+  if (key !== lastKey) { lastKey = key; render(r.body); }
+  const busy = r.body.some((j) => !["done", "failed"].includes(j.status));
+  clearTimeout(timer); timer = setTimeout(refresh, busy ? 5000 : 30000);
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = $("msg"); msg.className = "msg"; msg.textContent = "Sending…"; $("go").disabled = true;
+  store("pw", $("pw").value);
+  const r = await api("/api/jobs", { method: "POST", body: JSON.stringify({ video: $("video").value, script: $("script").value, section: $("section").value }) });
+  $("go").disabled = false;
+  if (r.status === 401) askPassword(true);
+  if (!r.ok) { msg.className = "msg err"; msg.textContent = r.body.error || r.body.detail || "Couldn't start the reel."; return; }
+  msg.className = "msg ok"; msg.textContent = "Started! Progress shows below.";
+  $("video").value = ""; lastKey = ""; refresh();
+});
+$("pw").addEventListener("change", () => { store("pw", $("pw").value); lastKey = ""; refresh(); });
+
+checkOnline(); setInterval(checkOnline, 30000); refresh();
+</script>
+</body>
+</html>
